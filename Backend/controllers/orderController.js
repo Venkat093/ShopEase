@@ -15,7 +15,6 @@ const getOrdersByUserId = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Fetch orders for the user
     const orders = await orderService.getOrdersByUserId(userId);
 
     // Extract all unique product IDs from all orders
@@ -24,18 +23,15 @@ const getOrdersByUserId = async (req, res) => {
       return acc;
     }, []))];
 
-    // Fetch product details for all product IDs
     const productPromises = productIds.map(productId => productService.getProductById(productId));
     const products = await Promise.all(productPromises);
 
-    // Replace product IDs with product details in each order
     const ordersWithProducts = orders.map(order => ({
       ...order,
       products: order.products.map(productId => products.find(p => p._id.toString() === productId)),
       totalPrice : order.products.reduce((sum, product) => sum + product.listPrice, 0)
     }));
 
-    // Return the updated orders object with detailed product information
     res.status(200).json({ orders: ordersWithProducts });
   } catch (error) {
     console.error('Failed to fetch orders:', error);
